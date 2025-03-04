@@ -1,4 +1,5 @@
 import re
+import csv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -24,11 +25,21 @@ chrome_options.add_argument(f"--profile-directory={profile_directory}")
 service = Service('./chromedriver-mac-arm64/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
+# --- CSV File Setup ---
+csv_file = "scraped_user_info.csv"
+fieldnames = ["handle", "email", "phone", "instagram", "whatsapp"]
+
+# Open CSV file in write mode; rows will be written as each user is scraped.
+csvfile = open(csv_file, mode="w", newline="", encoding="utf-8")
+writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+writer.writeheader()
+csvfile.flush()
+
 def scrape_profile_contact_info(handle):
     """
     Given a Twitter handle (e.g. '@username'), open the user's profile page
-    and search for any email, phone number, Instagram link, or WhatsApp link.
-    Returns a dictionary of found contact information.
+    and search for any email, phone number, Instagram link, or WhatsApp link
+    within the profile box. Returns a dictionary of found contact information.
     """
     contact_info = {
         "handle": handle,
@@ -48,15 +59,19 @@ def scrape_profile_contact_info(handle):
     driver.get(profile_url)
     time.sleep(5)  # Allow the profile page to load
 
-    # Optionally scroll down to load more content
-    last_height = driver.execute_script("return document.body.scrollHeight")
+    # Optionally scroll down to load more content in the profile
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(3)
-    new_height = driver.execute_script("return document.body.scrollHeight")
     
-    # Get the page source text to search for contact info
-    page_text = driver.page_source
-
+    # Locate the profile box and extract its text
+    try:
+        profile_box = driver.find_element(By.XPATH, '//div[@data-testid="UserProfileHeader_Items"]')
+        page_text = profile_box.text
+    except Exception as e:
+        print("Profile box not found. Skipping contact info scraping for", handle)
+        page_text = ""
+    
+    # Run regex searches on the profile box text
     emails = email_pattern.findall(page_text)
     if emails:
         contact_info["email"] = emails[0]
@@ -82,8 +97,8 @@ def scrape_profile_contact_info(handle):
 try:
     # --- Step 1: Log in to Twitter ---
     driver.get("https://twitter.com/login")
-    print("Please log in to Twitter manually if necessary. Waiting 5 seconds...")
-    time.sleep(5)
+    print("Please log in to Twitter manually if necessary. Waiting 30 seconds...")
+    time.sleep(30)
 
     # --- Step 2: Search for a Query ---
     search_query = "dogecoin"  # Change this to your desired search term
@@ -174,6 +189,9 @@ try:
             for handle in handles:
                 contact_info = scrape_profile_contact_info(handle)
                 print("Contact info for", handle, ":", contact_info)
+                # Write each user's contact info immediately to the CSV file
+                writer.writerow(contact_info)
+                csvfile.flush()  # flush the row so it is written to disk immediately
 
             # Close the tweet detail tab and switch back to the main search results tab
             driver.close()
@@ -185,3 +203,5 @@ try:
 
 finally:
     driver.quit()
+    csvfile.close()
+    print(f"Scraped user info saved to {csv_file}")
