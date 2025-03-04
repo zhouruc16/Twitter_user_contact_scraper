@@ -146,6 +146,9 @@ class TwitterScraper:
         profile_scraper = ProfileScraper(self.driver)
         for handle in handles:
             contact_info = profile_scraper.scrape_profile_contact_info(handle)
+            if not contact_info:
+                print("No contact info returned for", handle)
+                continue
             print("Contact info for", handle, ":", contact_info)
             self.csv_writer.writerow(contact_info)
             self.csv_handle.flush()
@@ -209,3 +212,14 @@ class ProfileScraper:
         if emails:
             contact_info["email"] = emails[0]
         phones = self.phone_pattern.findall(page_text)
+        if phones:
+            contact_info["phone"] = phones[0]
+        instagrams = self.instagram_pattern.findall(page_text)
+        if instagrams:
+            contact_info["instagram"] = instagrams[0]
+        whatsapps = self.whatsapp_pattern.findall(page_text)
+        if whatsapps:
+            contact_info["whatsapp"] = whatsapps[0]
+        self.driver.close()
+        self.driver.switch_to.window(self.driver.window_handles[-1])
+        return contact_info
