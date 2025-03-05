@@ -107,28 +107,35 @@ class TwitterScraper:
 
     def extract_handles_from_tweet(self):
         handles = set()
-        # Extract the tweet poster's handle
+        # Extract the tweet poster's handle using the href attribute
         try:
-            original_handle = self.driver.find_element(
-                By.XPATH, '//article//div[@data-testid="User-Name"]//span[contains(text(),"@")]'
-            ).text.strip()
+            link_element = self.driver.find_element(
+                By.XPATH, '//article//div[@data-testid="User-Name"]//a[starts-with(@href, "/")]'
+            )
+            original_url = link_element.get_attribute("href").strip()
+            # Parse the username from the URL
+            original_handle = original_url.rstrip("/").split("/")[-1]
             handles.add(original_handle)
             print("Tweet poster:", original_handle)
         except Exception as e:
             print("Error extracting tweet poster handle:", e)
-        # Extract additional handles from comments/articles
+        
+        # Extract additional handles from comments/articles using the href attribute
         articles = self.driver.find_elements(By.XPATH, '//article')
         for art in articles:
             try:
-                handle = art.find_element(
-                    By.XPATH, './/div[@data-testid="User-Name"]//span[contains(text(),"@")]'
-                ).text.strip()
+                link_element = art.find_element(
+                    By.XPATH, './/div[@data-testid="User-Name"]//a[starts-with(@href, "/")]'
+                )
+                url = link_element.get_attribute("href").strip()
+                handle = url.rstrip("/").split("/")[-1]
                 if handle:
                     handles.add(handle)
             except Exception:
                 continue
         print("Handles found:", handles)
         return handles
+
 
     def process_tweet(self, tweet_url):
         print(f"\nProcessing tweet: {tweet_url}")
