@@ -9,11 +9,11 @@ if __name__ == "__main__":
     PROFILE_DIRECTORY = None
     
     # Supply either a hashtag (e.g., "#dogecoin") or a keyword (e.g., "dogecoin")
-    SEARCH_QUERY = "#dogecoin"  # or "dogecoin"
+    SEARCH_QUERY = "#保健品"  # or "dogecoin"
     
     # Prepare directory structure: base directory "scraped_user_info", then subdirectory by the query string (without the '#' symbol)
     base_dir = "scraped_user_info"
-    query_dir = SEARCH_QUERY.replace("#", "").strip()
+    query_dir = SEARCH_QUERY.strip()
     query_dir_path = os.path.join(base_dir, query_dir)
     os.makedirs(query_dir_path, exist_ok=True)
     

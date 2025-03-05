@@ -114,7 +114,7 @@ class TwitterScraper:
             )
             original_url = link_element.get_attribute("href").strip()
             # Parse the username from the URL
-            original_handle = original_url.rstrip("/").split("/")[-1]
+            original_handle = '@' + original_url.rstrip("/").split("/")[-1]
             handles.add(original_handle)
             print("Tweet poster:", original_handle)
         except Exception as e:
@@ -128,7 +128,7 @@ class TwitterScraper:
                     By.XPATH, './/div[@data-testid="User-Name"]//a[starts-with(@href, "/")]'
                 )
                 url = link_element.get_attribute("href").strip()
-                handle = url.rstrip("/").split("/")[-1]
+                handle = '@' + url.rstrip("/").split("/")[-1]
                 if handle:
                     handles.add(handle)
             except Exception:
