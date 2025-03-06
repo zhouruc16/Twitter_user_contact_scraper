@@ -29,3 +29,4 @@ if __name__ == "__main__":
         scraper.run()
     except Exception as e:
         print(e)
+

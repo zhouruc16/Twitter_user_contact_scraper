@@ -6,11 +6,11 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 class TwitterScraper:
     def __init__(
         self,
-        driver_path,
         csv_file,
         search_query,
         max_users,
@@ -18,6 +18,7 @@ class TwitterScraper:
         headless=False,
         user_data_dir=None,
         profile_directory=None,
+        driver_path=None
     ):
         self.driver_path = driver_path
         self.csv_file = csv_file
@@ -57,7 +58,9 @@ class TwitterScraper:
         if self.profile_directory:
             chrome_options.add_argument(f"--profile-directory={self.profile_directory}")
 
-        service = Service(self.driver_path)
+        service = Service(ChromeDriverManager().install())
+        if self.driver_path:
+            service = Service(self.driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
 
